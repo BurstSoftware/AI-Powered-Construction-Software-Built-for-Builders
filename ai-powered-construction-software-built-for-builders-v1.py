@@ -1,5 +1,4 @@
 import streamlit as st
-from datetime import datetime
 
 # Page configuration
 st.set_page_config(
@@ -9,63 +8,88 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Improved Custom CSS - Better Contrast
+# ====================== DARK THEME CSS ======================
 st.markdown("""
     <style>
+    /* Main background - Dark */
+    .stApp {
+        background-color: #0F172A;
+        color: #F1F5F9;
+    }
+    
     .main-header {
         font-size: 3rem;
         font-weight: bold;
-        color: #1E3A8A;
+        color: #60A5FA;
         text-align: center;
         margin-bottom: 0.5rem;
     }
     .tagline {
         font-size: 1.5rem;
-        color: #1F2937;
+        color: #E2E8F0;
         text-align: center;
         font-style: italic;
     }
-    
-    /* Ensure all text in white cards is dark */
+
+    /* Dark Cards with White Text */
     .module-card {
-        border: 1px solid #E2E8F0;
+        border: 1px solid #334155;
         border-radius: 12px;
         padding: 1.5rem;
-        background-color: #FFFFFF;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        background-color: #1E2937;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         transition: transform 0.2s;
-        color: #111827 !important;           /* Dark text */
+        color: #F1F5F9 !important;
     }
     .module-card h3 {
-        color: #1E40AF !important;
+        color: #93C5FD !important;
     }
     .module-card p {
-        color: #374151 !important;
+        color: #CBD5E1 !important;
     }
-    
+
+    /* Benefit Boxes */
     .benefit {
-        background-color: #F8FAFC;
+        background-color: #1E2937;
         padding: 1rem;
         border-radius: 8px;
-        border-left: 4px solid #3B82F6;
-        color: #111827 !important;
+        border-left: 4px solid #60A5FA;
+        color: #F1F5F9 !important;
     }
-    
-    /* General text improvements */
+
+    /* General Text - White */
     .stMarkdown, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, 
-    .stMarkdown h4, .stMarkdown p, .stMarkdown li {
-        color: #1F2937 !important;
+    .stMarkdown h4, .stMarkdown p, .stMarkdown li, .stWrite {
+        color: #F1F5F9 !important;
     }
-    
-    /* Sidebar */
-    .css-1d391kg, .css-1v3fvcr {
-        color: #1F2937;
+
+    /* Sidebar - Dark */
+    section[data-testid="stSidebar"] {
+        background-color: #1E2937;
+        color: #F1F5F9;
+    }
+    .stRadio label, .stSidebar .stMarkdown {
+        color: #E2E8F0 !important;
+    }
+
+    /* Buttons & Success Messages */
+    .stButton button {
+        background-color: #3B82F6;
+        color: white;
+    }
+    .stSuccess {
+        background-color: #166534;
+        color: #86EFAC;
+    }
+    .stInfo {
+        background-color: #1E40AF;
+        color: #BFDBFE;
     }
     </style>
 """, unsafe_allow_html=True)
 
 # Sidebar Navigation
-st.sidebar.image("https://via.placeholder.com/150x50/1E3A8A/FFFFFF?text=Burst", width=150)
+st.sidebar.image("https://via.placeholder.com/150x50/60A5FA/0F172A?text=Burst", width=150)
 st.sidebar.title("🚀 Burst")
 st.sidebar.markdown("**AI-Powered Construction Software**")
 
@@ -89,7 +113,7 @@ if page == "🏠 Home":
     
     col1, col2 = st.columns([3, 2])
     with col1:
-        st.image("https://via.placeholder.com/800x400/1E40AF/FFFFFF?text=Burst+Dashboard+Preview", use_column_width=True)
+        st.image("https://via.placeholder.com/800x400/334155/F1F5F9?text=Burst+Dashboard+Preview", use_column_width=True)
         st.markdown("### Automate the everyday work of contractors")
         st.write("""
         From estimating to invoicing — Burst connects everything in one seamless platform. 
@@ -107,7 +131,7 @@ if page == "🏠 Home":
             st.success("Trial started! (Demo)")
 
     st.markdown("### Trusted by builders across the country")
-    st.image("https://via.placeholder.com/800x120/64748B/FFFFFF?text=Contractor+Logos+Row", use_column_width=True)
+    st.image("https://via.placeholder.com/800x120/475569/F1F5F9?text=Contractor+Logos+Row", use_column_width=True)
 
 # ==================== CORE MODULES ====================
 elif page == "📋 Core Modules":
@@ -156,11 +180,11 @@ elif page == "⭐ Key Benefits":
         st.subheader("Happy Customers & Partners")
         st.markdown('<div class="benefit">Client & Sub portals<br>Flexible payment options<br>Digital approvals</div>', unsafe_allow_html=True)
 
-# ==================== Other Pages (unchanged but inherit new CSS) ====================
+# ==================== OTHER PAGES ====================
 elif page == "🔨 Estimating":
     st.title("AI-Powered Estimating")
     st.write("**Turn institutional knowledge into a fast, repeatable system.**")
-    st.image("https://via.placeholder.com/900x500/1E40AF/FFFFFF?text=AI+Estimating+Demo", use_column_width=True)
+    st.image("https://via.placeholder.com/900x500/334155/F1F5F9?text=AI+Estimating+Demo", use_column_width=True)
     
     for feature in [
         "Describe project or upload plans → AI generates complete estimate",
@@ -210,7 +234,7 @@ elif page == "📞 Contact Us":
 # Footer
 st.markdown("---")
 st.markdown(
-    "<p style='text-align: center; color: #334155;'>"
+    "<p style='text-align: center; color: #94A3B8;'>"
     "© 2026 Burst Construction Software • constructionsoftwaretools.com"
     "</p>",
     unsafe_allow_html=True
