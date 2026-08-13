@@ -145,7 +145,7 @@ page = st.sidebar.radio("Navigate", [
 
 # ==================== HOME PAGE ====================
 if page == "🏠 Home":
-    st.markdown('<h1 class="main-header">Burst Construction Software</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">Burst Software Development</h1>', unsafe_allow_html=True)
     st.markdown('<p class="tagline">AI-Powered Construction Software Built for Builders</p>', unsafe_allow_html=True)
     st.markdown("---")
     
