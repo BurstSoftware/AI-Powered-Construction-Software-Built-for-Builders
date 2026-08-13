@@ -128,7 +128,7 @@ st.markdown("""
 
 # Sidebar Navigation
 st.sidebar.image("https://via.placeholder.com/150x50/60A5FA/0F172A?text=Burst", width=150)
-st.sidebar.title("🚀 Burst")
+st.sidebar.title("🚀 Burst Construction Software")
 st.sidebar.markdown("**AI-Powered Construction Software**")
 
 page = st.sidebar.radio("Navigate", [
