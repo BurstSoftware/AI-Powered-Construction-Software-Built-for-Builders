@@ -113,7 +113,10 @@ if page == "🏠 Home":
     
     col1, col2 = st.columns([3, 2])
     with col1:
-        st.image("https://via.placeholder.com/800x400/334155/F1F5F9?text=Burst+Dashboard+Preview", use_column_width=True)
+        st.image(
+            "https://via.placeholder.com/800x400/334155/F1F5F9?text=Burst+Dashboard+Preview",
+            width="stretch"
+        )
         st.markdown("### Automate the everyday work of contractors")
         st.write("""
         From estimating to invoicing — Burst connects everything in one seamless platform. 
@@ -131,7 +134,10 @@ if page == "🏠 Home":
             st.success("Trial started! (Demo)")
 
     st.markdown("### Trusted by builders across the country")
-    st.image("https://via.placeholder.com/800x120/475569/F1F5F9?text=Contractor+Logos+Row", use_column_width=True)
+    st.image(
+        "https://via.placeholder.com/800x120/475569/F1F5F9?text=Contractor+Logos+Row",
+        width="stretch"
+    )
 
 # ==================== CORE MODULES ====================
 elif page == "📋 Core Modules":
@@ -184,7 +190,10 @@ elif page == "⭐ Key Benefits":
 elif page == "🔨 Estimating":
     st.title("AI-Powered Estimating")
     st.write("**Turn institutional knowledge into a fast, repeatable system.**")
-    st.image("https://via.placeholder.com/900x500/334155/F1F5F9?text=AI+Estimating+Demo", use_column_width=True)
+    st.image(
+        "https://via.placeholder.com/900x500/334155/F1F5F9?text=AI+Estimating+Demo",
+        width="stretch"
+    )
     
     for feature in [
         "Describe project or upload plans → AI generates complete estimate",
