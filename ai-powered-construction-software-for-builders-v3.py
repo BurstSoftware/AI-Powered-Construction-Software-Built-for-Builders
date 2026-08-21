@@ -1,4 +1,9 @@
 import streamlit as st
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
+import plotly.graph_objects as go
+import plotly.express as px
 
 # Page configuration
 st.set_page_config(
@@ -108,6 +113,20 @@ st.markdown("""
         margin-bottom: 0.6rem;
     }
 
+    /* UI Card */
+    .ui-card {
+        background-color: #1E2937;
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid #334155;
+        margin-bottom: 1rem;
+    }
+
+    .ui-card h4 {
+        color: #93C5FD;
+        margin-top: 0;
+    }
+
     /* General Text - White */
     .stMarkdown, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, 
     .stMarkdown h4, .stMarkdown p, .stMarkdown li, .stWrite {
@@ -135,6 +154,40 @@ st.markdown("""
     .stInfo {
         background-color: #1E40AF;
         color: #BFDBFE;
+    }
+
+    .stWarning {
+        background-color: #92400E;
+        color: #FCD34D;
+    }
+
+    /* Status Badges */
+    .status-badge {
+        display: inline-block;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: bold;
+    }
+    .status-active {
+        background-color: #166534;
+        color: #86EFAC;
+    }
+    .status-pending {
+        background-color: #92400E;
+        color: #FCD34D;
+    }
+    .status-paid {
+        background-color: #1E40AF;
+        color: #BFDBFE;
+    }
+
+    .table-header {
+        background-color: #1E2937;
+        padding: 1rem;
+        border-radius: 8px;
+        border-bottom: 2px solid #334155;
+        margin-bottom: 0.5rem;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -178,7 +231,7 @@ if page == "🏠 Home":
     with col1:
         st.image(
             "https://via.placeholder.com/800x400/334155/F1F5F9?text=Burst+Dashboard+Preview",
-            width="stretch"
+            use_column_width=True
         )
         st.markdown("### Automate the everyday work of contractors")
         st.write("""
@@ -199,7 +252,7 @@ if page == "🏠 Home":
     st.markdown("### Trusted by builders across the country")
     st.image(
         "https://via.placeholder.com/800x120/475569/F1F5F9?text=Contractor+Logos+Row",
-        width="stretch"
+        use_column_width=True
     )
 
 # ==================== CORE MODULES ====================
@@ -249,870 +302,1116 @@ elif page == "⭐ Key Benefits":
         st.subheader("Happy Customers & Partners")
         st.markdown('<div class="benefit">Client & Sub portals<br>Flexible payment options<br>Digital approvals</div>', unsafe_allow_html=True)
 
-# ==================== ESTIMATES ====================
+# ==================== ESTIMATES UI ====================
 elif page == "📋 Estimates":
     st.title("📋 Professional Estimates")
     st.markdown("### Win more jobs with AI-powered, professional estimates in minutes")
     
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.image("https://via.placeholder.com/600x350/334155/F1F5F9?text=Estimate+Editor", use_column_width=True)
-    with col2:
-        st.metric("Avg. Time to Estimate", "15 min", "vs 90 min manually")
-        st.metric("Estimate Win Rate", "38%", "↑ 22% vs manual")
-        st.metric("Professional Look", "100%", "Branded & polished")
-    
-    st.markdown("---")
-    st.subheader("Key Features")
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("""
-        <div class="feature-list">
-            <ul>
-                <li>✨ AI generates estimates from descriptions or photos</li>
-                <li>📐 Industry standard pricing & labor rates</li>
-                <li>💾 Reusable templates for common jobs</li>
-                <li>📱 Mobile-friendly estimate generation</li>
-                <li>🎨 Custom branding with your logo & colors</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("""
-        <div class="feature-list">
-            <ul>
-                <li>📧 Email directly to clients with tracking</li>
-                <li>✍️ Client e-signature for digital approval</li>
-                <li>🔄 Auto-convert to budget with one click</li>
-                <li>📊 Track acceptance rates & revenue</li>
-                <li>💼 Markup/margin customization</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    st.subheader("How It Works")
-    tab1, tab2, tab3 = st.tabs(["AI-Powered", "Templates", "Client Portal"])
+    tab1, tab2, tab3 = st.tabs(["Create Estimate", "Templates", "Sent Estimates"])
     
     with tab1:
-        st.write("**Describe your project or upload photos → Burst AI generates a complete estimate**")
-        st.info("Our AI learns from your historical estimates to suggest the right pricing and labor costs automatically.")
+        col1, col2 = st.columns([1.5, 1])
+        
+        with col1:
+            st.markdown("### Quick Estimate Builder")
+            with st.form("estimate_form"):
+                project_name = st.text_input("Project Name", value="Kitchen Remodel - Main St")
+                customer_name = st.text_input("Customer Name", value="John Smith")
+                
+                st.markdown("**Project Details**")
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    project_type = st.selectbox("Project Type", ["Kitchen Remodel", "Bathroom Remodel", "Roofing", "Siding", "Deck", "Addition", "Custom"])
+                with col_b:
+                    square_footage = st.number_input("Square Footage", value=500, min_value=100)
+                
+                st.markdown("**Line Items**")
+                
+                line_items_data = {
+                    "Description": ["Labor", "Materials", "Permits & Fees", "Contingency (10%)"],
+                    "Quantity": [40, 1, 1, 1],
+                    "Unit": ["hrs", "job", "job", "job"],
+                    "Rate": [65, 4200, 500, 470],
+                    "Total": [2600, 4200, 500, 470]
+                }
+                
+                line_items_df = pd.DataFrame(line_items_data)
+                
+                edited_df = st.data_editor(
+                    line_items_df,
+                    key="estimate_items",
+                    hide_index=True,
+                    use_container_width=True
+                )
+                
+                st.markdown("**Pricing**")
+                col_x, col_y, col_z = st.columns(3)
+                with col_x:
+                    markup_percent = st.slider("Markup %", 0, 50, 20)
+                with col_y:
+                    margin_percent = st.slider("Margin %", 0, 50, 25)
+                with col_z:
+                    discount_percent = st.slider("Discount %", 0, 20, 0)
+                
+                col_p1, col_p2 = st.columns(2)
+                with col_p1:
+                    st.text_input("Estimate Valid Until", value=(datetime.now() + timedelta(days=30)).strftime("%m/%d/%Y"))
+                with col_p2:
+                    st.selectbox("Currency", ["USD", "CAD", "EUR"])
+                
+                if st.form_submit_button("Generate Estimate", type="primary", use_container_width=True):
+                    st.success("✅ Estimate created successfully!")
+                    st.balloons()
+        
+        with col2:
+            st.markdown("### Estimate Preview")
+            st.markdown("""
+            <div class="ui-card">
+                <h4>📄 Estimate #EST-2024-001</h4>
+                <p style="color: #CBD5E1; font-size: 0.9rem;">
+                    <strong>Customer:</strong> John Smith<br>
+                    <strong>Project:</strong> Kitchen Remodel - Main St<br>
+                    <strong>Date:</strong> Dec 15, 2024<br>
+                    <strong>Valid Until:</strong> Jan 14, 2025
+                </p>
+                <hr style="border-color: #334155;">
+                <p style="color: #93C5FD; font-weight: bold;">Subtotal: $7,770</p>
+                <p style="color: #93C5FD; font-weight: bold;">Tax (8%): $622</p>
+                <p style="color: #10B981; font-weight: bold; font-size: 1.2rem;">Total: $8,392</p>
+                <hr style="border-color: #334155;">
+                <div style="margin-top: 1rem;">
+                    <button style="width: 100%; padding: 0.5rem; background-color: #3B82F6; color: white; border: none; border-radius: 6px; cursor: pointer;">📧 Email to Client</button>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("**Recent Estimates**")
+            recent = pd.DataFrame({
+                "Status": ["✅ Accepted", "⏳ Pending", "❌ Declined"],
+                "Customer": ["Smith", "Johnson", "Davis"],
+                "Amount": ["$8,392", "$12,500", "$5,200"],
+                "Date": ["Dec 15", "Dec 10", "Dec 5"]
+            })
+            st.dataframe(recent, use_container_width=True, hide_index=True)
     
     with tab2:
-        st.write("Save time on recurring work. Build reusable templates for kitchens, bathrooms, roofing, and more.")
-        st.success("Edit once, use forever. Update labor rates and materials across all templates instantly.")
+        st.markdown("### Reusable Templates")
+        template_cols = st.columns(3)
+        templates = [
+            ("🏠 Kitchen Remodel", "Average: $8,500", "12 components"),
+            ("🚿 Bathroom Remodel", "Average: $5,200", "8 components"),
+            ("🛖 Deck Build", "Average: $6,800", "6 components"),
+        ]
+        
+        for col, (name, price, items) in zip(template_cols, templates):
+            with col:
+                st.markdown(f"""
+                <div class="ui-card">
+                    <h4>{name}</h4>
+                    <p>{price}<br><small>{items}</small></p>
+                    <button style="width: 100%; padding: 0.5rem; background-color: #3B82F6; color: white; border: none; border-radius: 6px; cursor: pointer;">Use Template</button>
+                </div>
+                """, unsafe_allow_html=True)
     
     with tab3:
-        st.write("Clients get a beautiful, branded estimate on their phone or desktop. One-click approval = signed contract.")
-        st.success("Approval tracking: See exactly when they opened it and signed.")
-    
-    if st.button("Try Estimate Tool (Demo)", type="primary", use_container_width=True):
-        st.info("Demo mode activated — upload a photo or describe a job to see AI in action!")
+        st.markdown("### Estimate Status Tracker")
+        
+        estimates_data = pd.DataFrame({
+            "Estimate #": ["EST-001", "EST-002", "EST-003", "EST-004", "EST-005"],
+            "Customer": ["John Smith", "Sarah Johnson", "Mike Davis", "Lisa Brown", "Tom Wilson"],
+            "Amount": ["$8,392", "$12,500", "$5,200", "$15,800", "$3,900"],
+            "Sent": ["Dec 15", "Dec 10", "Dec 5", "Nov 28", "Nov 15"],
+            "Status": ["✅ Accepted", "⏳ Viewed", "⏳ Pending", "❌ Declined", "✅ Accepted"],
+            "Win %": ["100%", "67%", "45%", "0%", "100%"]
+        })
+        
+        st.dataframe(estimates_data, use_container_width=True, hide_index=True)
+        
+        # Stats
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Total Sent", "127", "this month")
+        with col2:
+            st.metric("Accepted", "52", "41% win rate")
+        with col3:
+            st.metric("Total Value", "$487,500", "pending")
+        with col4:
+            st.metric("Avg. Time to Sign", "3.2 days")
 
-# ==================== BUDGETS ====================
+# ==================== BUDGETS UI ====================
 elif page == "📊 Budgets":
     st.title("📊 Smart Budgets & Cash Flow")
-    st.markdown("### See profit and loss at a glance with real-time line-item budgets")
+    st.markdown("### Real-time budget tracking with instant alerts")
     
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.image("https://via.placeholder.com/600x350/334155/F1F5F9?text=Budget+Dashboard", use_column_width=True)
-    with col2:
-        st.metric("Budget Accuracy", "94%", "within ±5%")
-        st.metric("Cashflow Issues Caught", "3.2x faster", "than spreadsheets")
-        st.metric("Monthly Updates", "Real-time", "no delays")
+    tab1, tab2, tab3 = st.tabs(["Budget Dashboard", "Create Budget", "Cash Flow Forecast"])
     
-    st.markdown("---")
-    st.subheader("Key Features")
-    col1, col2 = st.columns(2)
+    with tab1:
+        # KPIs
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Active Projects", "12", "within budget")
+        with col2:
+            st.metric("At Risk", "2", "over 10%")
+        with col3:
+            st.metric("Total Budget", "$487,500", "↑ $12,000 this week")
+        with col4:
+            st.metric("Avg. Variance", "±3.2%", "excellent accuracy")
+        
+        st.markdown("---")
+        
+        # Project Budget List
+        st.markdown("### Project Budgets")
+        
+        budget_data = pd.DataFrame({
+            "Project": ["Kitchen Remodel", "Bathroom Remodel", "Deck Addition", "Siding Project", "Roof Repair"],
+            "Budget": [15000, 8500, 12000, 9500, 6200],
+            "Actual": [14500, 8900, 11800, 9800, 6100],
+            "Remaining": [500, -400, 200, -300, 100],
+            "% Complete": [97, 105, 98, 103, 98]
+        })
+        
+        for idx, row in budget_data.iterrows():
+            col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 2])
+            
+            with col1:
+                st.write(f"**{row['Project']}**")
+            with col2:
+                st.write(f"${row['Budget']:,}")
+            with col3:
+                st.write(f"${row['Actual']:,}")
+            with col4:
+                status = "🔴" if row['Remaining'] < 0 else "🟢"
+                st.write(f"{status} ${row['Remaining']:,}")
+            with col5:
+                st.progress(min(row['% Complete'] / 100, 1.0))
+        
+        st.markdown("---")
+        
+        # Chart
+        st.markdown("### Budget vs. Actual (All Projects)")
+        
+        fig = go.Figure(data=[
+            go.Bar(name='Budget', x=budget_data['Project'], y=budget_data['Budget'], marker_color='#3B82F6'),
+            go.Bar(name='Actual', x=budget_data['Project'], y=budget_data['Actual'], marker_color='#10B981')
+        ])
+        fig.update_layout(
+            barmode='group',
+            template='plotly_dark',
+            paper_bgcolor='rgba(15, 23, 42, 1)',
+            plot_bgcolor='rgba(30, 41, 55, 1)',
+            font=dict(color='#F1F5F9'),
+            hovermode='x unified',
+            height=400
+        )
+        st.plotly_chart(fig, use_container_width=True)
     
-    with col1:
-        st.markdown("""
-        <div class="feature-list">
-            <ul>
-                <li>💰 Auto-create budget from estimate</li>
-                <li>📊 Compare budget vs. actual at a glance</li>
-                <li>⚠️ Alerts when spending exceeds budget</li>
-                <li>📈 Line-item profitability tracking</li>
-                <li>🔄 Update budgets without starting over</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+    with tab2:
+        st.markdown("### Create New Budget")
+        
+        with st.form("budget_form"):
+            col1, col2 = st.columns(2)
+            with col1:
+                project_name = st.text_input("Project Name", value="New Renovation")
+                project_type = st.selectbox("Project Type", ["Kitchen", "Bathroom", "Deck", "Roof", "Siding", "Custom"])
+            with col2:
+                start_date = st.date_input("Start Date")
+                end_date = st.date_input("End Date")
+            
+            st.markdown("**Budget Categories**")
+            
+            categories = {
+                "Labor": 5000,
+                "Materials": 8000,
+                "Subcontractors": 4000,
+                "Equipment": 1500,
+                "Permits & Fees": 500,
+                "Contingency (10%)": 1900
+            }
+            
+            budget_items = {}
+            for category, default_val in categories.items():
+                budget_items[category] = st.number_input(f"{category}", value=default_val, min_value=0, step=100)
+            
+            total_budget = sum(budget_items.values())
+            
+            st.markdown(f"### Total Budget: ${total_budget:,}")
+            
+            if st.form_submit_button("Create Budget", type="primary", use_container_width=True):
+                st.success("✅ Budget created successfully!")
     
-    with col2:
-        st.markdown("""
-        <div class="feature-list">
-            <ul>
-                <li>💵 Cashflow forecasting (30/60/90 days)</li>
-                <li>🎯 Markup & margin by category</li>
-                <li>📱 Mobile budget updates from the field</li>
-                <li>🔗 Link invoices to budget line items</li>
-                <li>📉 Historical budget performance</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    st.subheader("Budget Example")
-    budget_data = {
-        "Category": ["Labor", "Materials", "Subcontractors", "Equipment", "Overhead"],
-        "Budget": [15000, 8000, 12000, 3000, 2000],
-        "Actual": [14500, 8200, 11800, 3100, 2000],
-        "Variance": [500, -200, 200, -100, 0]
-    }
-    st.bar_chart({"Budget": budget_data["Budget"], "Actual": budget_data["Actual"]})
-    
-    if st.button("View Budget Templates", type="primary", use_container_width=True):
-        st.success("25+ pre-built templates available for common project types!")
+    with tab3:
+        st.markdown("### Cash Flow Forecast (90 Days)")
+        
+        dates = pd.date_range(start=datetime.now(), periods=12, freq='W')
+        cash_in = np.cumsum(np.random.randint(5000, 15000, 12))
+        cash_out = np.cumsum(np.random.randint(4000, 12000, 12))
+        
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=dates, y=cash_in, name='Cash In', mode='lines+markers', 
+                                 line=dict(color='#10B981', width=3)))
+        fig.add_trace(go.Scatter(x=dates, y=cash_out, name='Cash Out', mode='lines+markers',
+                                 line=dict(color='#EF4444', width=3)))
+        
+        fig.update_layout(
+            template='plotly_dark',
+            paper_bgcolor='rgba(15, 23, 42, 1)',
+            plot_bgcolor='rgba(30, 41, 55, 1)',
+            font=dict(color='#F1F5F9'),
+            hovermode='x unified',
+            height=400,
+            yaxis_title="Amount ($)"
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Projected Cash In", "$187,500", "next 90 days")
+        with col2:
+            st.metric("Projected Cash Out", "$156,200", "next 90 days")
+        with col3:
+            st.metric("Forecasted Balance", "$31,300", "positive trend")
 
-# ==================== INVOICES ====================
+# ==================== INVOICES UI ====================
 elif page == "📄 Invoices":
     st.title("📄 Professional Invoicing")
     st.markdown("### Get paid faster with branded invoices and automated reminders")
     
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.image("https://via.placeholder.com/600x350/334155/F1F5F9?text=Invoice+Generator", use_column_width=True)
-    with col2:
-        st.metric("Invoice Turnaround", "2 days faster", "vs manual")
-        st.metric("Payment Collection", "36% faster", "with reminders")
-        st.metric("Error Rate", "99% reduction", "automated checks")
+    tab1, tab2, tab3 = st.tabs(["Send Invoice", "Invoice Templates", "Payment Status"])
     
-    st.markdown("---")
-    st.subheader("Key Features")
-    col1, col2 = st.columns(2)
+    with tab1:
+        col1, col2 = st.columns([1.5, 1])
+        
+        with col1:
+            st.markdown("### Create Invoice")
+            
+            with st.form("invoice_form"):
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    project = st.selectbox("Project", ["Kitchen Remodel", "Bathroom Remodel", "Deck Build"])
+                    customer = st.text_input("Customer Email", value="john@email.com")
+                with col_b:
+                    invoice_type = st.selectbox("Invoice Type", ["Final", "Progress (50%)", "Progress (75%)"])
+                    amount = st.number_input("Invoice Amount", value=8392, step=100)
+                
+                description = st.text_area("Description", value="Kitchen Remodel - Project Completion")
+                
+                due_date = st.date_input("Due Date", value=datetime.now() + timedelta(days=30))
+                
+                col_x, col_y = st.columns(2)
+                with col_x:
+                    accept_payments = st.checkbox("Accept online payments", value=True)
+                with col_y:
+                    send_reminders = st.checkbox("Auto-send payment reminders", value=True)
+                
+                if st.form_submit_button("Send Invoice", type="primary", use_container_width=True):
+                    st.success("✅ Invoice sent to customer!")
+        
+        with col2:
+            st.markdown("### Invoice Preview")
+            st.markdown(f"""
+            <div class="ui-card">
+                <h4>INVOICE #INV-2024-001</h4>
+                <p style="color: #CBD5E1; font-size: 0.9rem;">
+                    <strong>Bill To:</strong> John Smith<br>
+                    <strong>Project:</strong> Kitchen Remodel<br>
+                    <strong>Date:</strong> Today<br>
+                    <strong>Due:</strong> {due_date.strftime("%m/%d/%Y")}
+                </p>
+                <hr style="border-color: #334155;">
+                <p style="color: #F1F5F9;"><strong>Description</strong></p>
+                <p style="color: #CBD5E1;">Kitchen Remodel - Project Completion</p>
+                <hr style="border-color: #334155;">
+                <p style="color: #93C5FD; font-weight: bold; font-size: 1.2rem;">Amount Due: ${amount:,}</p>
+                <hr style="border-color: #334155;">
+                <div style="margin-top: 1rem;">
+                    <button style="width: 100%; padding: 0.5rem; background-color: #10B981; color: white; border: none; border-radius: 6px; cursor: pointer; margin-bottom: 0.5rem;">💳 Pay Now</button>
+                    <button style="width: 100%; padding: 0.5rem; background-color: #3B82F6; color: white; border: none; border-radius: 6px; cursor: pointer;">📧 Share Invoice</button>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
     
-    with col1:
-        st.markdown("""
-        <div class="feature-list">
-            <ul>
-                <li>📋 Auto-generate from budget line items</li>
-                <li>🎨 Custom branding & logo placement</li>
-                <li>📄 Progress billing (% complete)</li>
-                <li>💳 Accept payments directly in invoice</li>
-                <li>📧 Send & track opening automatically</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+    with tab2:
+        st.markdown("### Invoice Template Gallery")
+        
+        template_cols = st.columns(3)
+        templates = [
+            "Standard Invoice",
+            "Progress Billing",
+            "Retainer Invoice"
+        ]
+        
+        for col, template in zip(template_cols, templates):
+            with col:
+                st.markdown(f"""
+                <div class="ui-card">
+                    <h4>📄 {template}</h4>
+                    <p style="color: #CBD5E1;">Professionally designed template</p>
+                    <button style="width: 100%; padding: 0.5rem; background-color: #3B82F6; color: white; border: none; border-radius: 6px; cursor: pointer;">Use Template</button>
+                </div>
+                """, unsafe_allow_html=True)
     
-    with col2:
-        st.markdown("""
-        <div class="feature-list">
-            <ul>
-                <li>⏰ Automatic payment reminders (overdue)</li>
-                <li>📊 Invoice history & templates</li>
-                <li>🔗 Link to project for context</li>
-                <li>📱 Mobile invoice creation</li>
-                <li>🔐 Secure client portal access</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    st.info("💡 Tip: Most users get paid 36% faster by enabling online payment options directly on invoices.")
-    
-    if st.button("Create Invoice Template", type="primary", use_container_width=True):
-        st.success("Template saved! Use it for all future invoices.")
+    with tab3:
+        st.markdown("### Invoice Payment Status")
+        
+        invoices = pd.DataFrame({
+            "Invoice": ["INV-001", "INV-002", "INV-003", "INV-004", "INV-005"],
+            "Customer": ["Smith", "Johnson", "Davis", "Brown", "Wilson"],
+            "Amount": ["$8,392", "$12,500", "$5,200", "$15,800", "$3,900"],
+            "Sent": ["Dec 15", "Dec 10", "Dec 5", "Nov 28", "Nov 15"],
+            "Due": ["Jan 14", "Jan 9", "Jan 4", "Dec 28", "Dec 15"],
+            "Status": ["✅ Paid", "⏳ Pending", "⏳ Pending", "🔴 Overdue", "✅ Paid"],
+            "Days": ["0", "5", "10", "18", "27"]
+        })
+        
+        st.dataframe(invoices, use_container_width=True, hide_index=True)
+        
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Total Invoiced", "$46,192")
+        with col2:
+            st.metric("Paid", "$12,292", "27%")
+        with col3:
+            st.metric("Pending", "$30,000", "65%")
+        with col4:
+            st.metric("Overdue", "$3,900", "8%")
 
-# ==================== BILLS ====================
+# ==================== BILLS UI ====================
 elif page == "📥 Bills":
     st.title("📥 Bill Management & Expenses")
-    st.markdown("### Track every expense and connect it to your project budget")
+    st.markdown("### Track every expense and connect it to your budget")
     
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.image("https://via.placeholder.com/600x350/334155/F1F5F9?text=Bill+Tracking", use_column_width=True)
-    with col2:
-        st.metric("Expense Processing", "10x faster", "with OCR")
-        st.metric("Budget Accuracy", "Improved 31%", "when tracking bills")
-        st.metric("Lost Expenses", "Down 87%", "documented automatically")
+    tab1, tab2, tab3 = st.tabs(["Upload Receipt", "Expense List", "Budget Matching"])
     
-    st.markdown("---")
-    st.subheader("Key Features")
-    col1, col2 = st.columns(2)
+    with tab1:
+        st.markdown("### Capture Receipt")
+        
+        col1, col2 = st.columns([1.5, 1])
+        
+        with col1:
+            uploaded_file = st.file_uploader("Upload Receipt Photo or PDF", type=['jpg', 'png', 'pdf'])
+            
+            if uploaded_file is not None:
+                st.image(uploaded_file, width=300)
+            
+            with st.form("receipt_form"):
+                st.markdown("**OCR Extracted Data** (Edit as needed)")
+                
+                vendor = st.text_input("Vendor", value="Home Depot")
+                amount = st.number_input("Amount", value=1200.50, step=0.01)
+                category = st.selectbox("Category", ["Materials", "Tools", "Equipment", "Labor", "Permits", "Other"])
+                project = st.selectbox("Project", ["Kitchen Remodel", "Bathroom Remodel", "Deck Build"])
+                
+                date = st.date_input("Date")
+                
+                if st.form_submit_button("Save Expense", type="primary", use_container_width=True):
+                    st.success("✅ Receipt saved and categorized!")
+        
+        with col2:
+            st.markdown("**Quick Stats**")
+            st.metric("Receipts This Month", "47")
+            st.metric("Total Captured", "$23,450")
+            st.metric("Processing Time", "Avg 2 sec")
     
-    with col1:
-        st.markdown("""
-        <div class="feature-list">
-            <ul>
-                <li>📸 Snap receipt photos from phone</li>
-                <li>🔍 OCR reads vendor, date & amount</li>
-                <li>📊 Auto-match to budget categories</li>
-                <li>🔗 Attach to specific job or line item</li>
-                <li>💾 Digital receipt storage</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+    with tab2:
+        st.markdown("### Recent Expenses")
+        
+        expenses = pd.DataFrame({
+            "Date": ["Dec 15", "Dec 14", "Dec 12", "Dec 10", "Dec 8"],
+            "Vendor": ["Home Depot", "Lowes", "Ace Hardware", "Local Supplier", "Tool Rental"],
+            "Amount": ["$1,200", "$650", "$320", "$2,100", "$450"],
+            "Category": ["Materials", "Materials", "Tools", "Materials", "Equipment"],
+            "Project": ["Kitchen", "Bathroom", "Deck", "Kitchen", "All"],
+            "Receipt": ["✅", "✅", "✅", "❌", "✅"]
+        })
+        
+        st.dataframe(expenses, use_container_width=True, hide_index=True)
     
-    with col2:
-        st.markdown("""
-        <div class="feature-list">
-            <ul>
-                <li>📋 Organize by vendor or category</li>
-                <li>⚠️ Alert when spending exceeds budget</li>
-                <li>📈 Expense reports & tax summaries</li>
-                <li>🏦 Sync with accounting software</li>
-                <li>📱 Mobile receipt capture</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    st.success("✅ Keep receipts organized digitally — never lose a deduction again.")
-    
-    if st.button("Upload Receipt (Demo)", type="primary", use_container_width=True):
-        st.info("Click to capture a receipt photo and see instant expense categorization!")
+    with tab3:
+        st.markdown("### Budget vs Actual Expenses")
+        
+        budget_comparison = pd.DataFrame({
+            "Category": ["Labor", "Materials", "Equipment", "Subs", "Permits"],
+            "Budget": [5000, 8000, 1500, 4000, 500],
+            "Actual": [4800, 8200, 1400, 3900, 450],
+            "Variance": [200, -200, 100, 100, 50]
+        })
+        
+        fig = go.Figure(data=[
+            go.Bar(name='Budget', x=budget_comparison['Category'], y=budget_comparison['Budget'], marker_color='#3B82F6'),
+            go.Bar(name='Actual', x=budget_comparison['Category'], y=budget_comparison['Actual'], marker_color='#EF4444')
+        ])
+        fig.update_layout(
+            barmode='group',
+            template='plotly_dark',
+            paper_bgcolor='rgba(15, 23, 42, 1)',
+            plot_bgcolor='rgba(30, 41, 55, 1)',
+            font=dict(color='#F1F5F9'),
+            height=400
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
-# ==================== PAYMENTS ====================
+# ==================== PAYMENTS UI ====================
 elif page == "💸 Payments":
     st.title("💸 Pay & Get Paid")
-    st.markdown("### One-click payments to subs, vendors, and employees — with full visibility")
+    st.markdown("### One-click payments with full visibility")
     
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.image("https://via.placeholder.com/600x350/334155/F1F5F9?text=Payment+Processing", use_column_width=True)
-    with col2:
-        st.metric("Payment Speed", "Same day ACH", "or instant card")
-        st.metric("Payment Methods", "6 options", "ACH, card, check, etc.")
-        st.metric("Processing Fees", "Highly competitive", "transparent pricing")
+    tab1, tab2, tab3 = st.tabs(["Make Payment", "Payment History", "Set Up Recurring"])
     
-    st.markdown("---")
-    st.subheader("Key Features")
-    col1, col2 = st.columns(2)
+    with tab1:
+        col1, col2 = st.columns([1.5, 1])
+        
+        with col1:
+            st.markdown("### Process Payment")
+            
+            with st.form("payment_form"):
+                payee_type = st.radio("Pay to", ["Vendor/Sub", "Employee", "Payroll"])
+                
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    if payee_type == "Vendor/Sub":
+                        payee = st.selectbox("Select Vendor", ["Home Depot", "Plumber - John's Plumbing", "Electrical - ABC Electric"])
+                    else:
+                        payee = st.selectbox("Select Employee", ["Mike Johnson", "Sarah Davis", "Tom Wilson"])
+                
+                with col_b:
+                    amount = st.number_input("Amount", value=1200.00, step=0.01)
+                
+                invoice_ref = st.text_input("Invoice/Reference #", value="INV-001")
+                
+                payment_method = st.selectbox("Payment Method", ["ACH Transfer (1-2 days)", "Instant Pay (+$5 fee)", "Check by Mail (3-5 days)"])
+                
+                project = st.selectbox("Link to Project", ["Kitchen Remodel", "Bathroom Remodel", "All Projects"])
+                
+                notes = st.text_area("Notes", value="Payment for materials delivery")
+                
+                if st.form_submit_button("Confirm Payment", type="primary", use_container_width=True):
+                    st.success("✅ Payment approved and scheduled!")
+                    st.info(f"Payment of ${amount} will be processed via {payment_method.split('(')[0].strip()}")
+        
+        with col2:
+            st.markdown("### Payment Methods")
+            
+            st.markdown("""
+            <div class="ui-card">
+                <h4>💳 Linked Cards</h4>
+                <p style="color: #CBD5E1;">Chase Business (****1234)</p>
+                <p style="color: #CBD5E1;">Amex (****5678)</p>
+            </div>
+            
+            <div class="ui-card">
+                <h4>🏦 Bank Accounts</h4>
+                <p style="color: #CBD5E1;">Business Checking - Chase</p>
+                <p style="color: #CBD5E1;">Operations - Wells Fargo</p>
+            </div>
+            """, unsafe_allow_html=True)
     
-    with col1:
-        st.markdown("""
-        <div class="feature-list">
-            <ul>
-                <li>💰 One-click pay from invoice or bill</li>
-                <li>🏦 ACH, credit card, or check</li>
-                <li>📱 Mobile payment approval</li>
-                <li>📋 Batch payments to multiple vendors</li>
-                <li>🔐 Role-based approval workflows</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+    with tab2:
+        st.markdown("### Payment History (Last 30 Days)")
+        
+        payments = pd.DataFrame({
+            "Date": ["Dec 15", "Dec 12", "Dec 10", "Dec 8", "Dec 5"],
+            "Payee": ["Home Depot", "John's Plumbing", "ABC Electric", "Lowes", "Equipment Rental"],
+            "Amount": ["$1,200", "$2,100", "$1,500", "$650", "$450"],
+            "Method": ["ACH", "Check", "Card", "ACH", "Card"],
+            "Status": ["✅ Complete", "✅ Complete", "✅ Complete", "⏳ Processing", "✅ Complete"],
+            "Reference": ["PO-001", "INV-045", "INV-046", "PO-002", "RENT-234"]
+        })
+        
+        st.dataframe(payments, use_container_width=True, hide_index=True)
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Total Paid (30d)", "$5,900")
+        with col2:
+            st.metric("Processing", "$450", "in progress")
+        with col3:
+            st.metric("Avg. Payment Time", "2.1 days")
     
-    with col2:
-        st.markdown("""
-        <div class="feature-list">
-            <ul>
-                <li>🎯 Auto-categorize for accounting</li>
-                <li>📊 Payment history & reconciliation</li>
-                <li>📧 Automatic payment notifications</li>
-                <li>💵 Accept payments from clients online</li>
-                <li>🔄 Recurring payment scheduling</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    st.info("💡 Save time: Set up recurring payments for regular vendors and never think about it again.")
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.success("✅ ACH Transfers")
-        st.caption("1-2 business days")
-    with col2:
-        st.success("✅ Instant Pay")
-        st.caption("Same day (fee applies)")
-    with col3:
-        st.success("✅ Check by Mail")
-        st.caption("3-5 business days")
-    
-    if st.button("Send Payment (Demo)", type="primary", use_container_width=True):
-        st.success("Payment scheduled! Vendor will receive notification.")
+    with tab3:
+        st.markdown("### Recurring Payments")
+        
+        st.info("Set up automatic recurring payments for regular expenses")
+        
+        recurring = pd.DataFrame({
+            "Vendor": ["Insurance Co", "Software License", "Equipment Lease"],
+            "Amount": ["$500", "$150", "$800"],
+            "Frequency": ["Monthly", "Monthly", "Weekly"],
+            "Next Payment": ["Dec 20", "Jan 1", "Dec 18"],
+            "Status": ["✅ Active", "✅ Active", "✅ Active"]
+        })
+        
+        st.dataframe(recurring, use_container_width=True, hide_index=True)
+        
+        if st.button("+ Add Recurring Payment", use_container_width=True):
+            st.success("New recurring payment form opened")
 
-# ==================== CHANGE ORDERS ====================
+# ==================== CHANGE ORDERS UI ====================
 elif page == "🔄 Change Orders":
     st.title("🔄 Change Order Management")
-    st.markdown("### Streamline change requests without losing track of scope or margin")
+    st.markdown("### Streamline changes without losing track of margin")
     
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.image("https://via.placeholder.com/600x350/334155/F1F5F9?text=Change+Orders", use_column_width=True)
-    with col2:
-        st.metric("Time to Process", "4x faster", "vs manual forms")
-        st.metric("Margin Protection", "98%", "capture all changes")
-        st.metric("Scope Disputes", "Down 92%", "documented approval")
+    tab1, tab2, tab3 = st.tabs(["Create Change Order", "Pending Approvals", "Change Order History"])
     
-    st.markdown("---")
-    st.subheader("Key Features")
-    col1, col2 = st.columns(2)
+    with tab1:
+        col1, col2 = st.columns([1.5, 1])
+        
+        with col1:
+            st.markdown("### New Change Order")
+            
+            with st.form("change_order_form"):
+                project = st.selectbox("Project", ["Kitchen Remodel", "Bathroom Remodel", "Deck Build"])
+                reason = st.text_area("Reason for Change", value="Client requested upgraded countertops")
+                
+                st.markdown("**Scope Changes**")
+                
+                change_items = pd.DataFrame({
+                    "Item": ["Original Scope", "Additional Countertops", "Upgraded Hardware"],
+                    "Description": ["As per estimate", "Granite instead of laminate", "Premium fixtures"],
+                    "Amount": [8392, 1500, 300]
+                })
+                
+                st.data_editor(change_items, key="change_items", hide_index=True, use_container_width=True)
+                
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    timeline_impact = st.selectbox("Timeline Impact", ["No change", "+3 days", "+1 week", "+2 weeks"])
+                with col_b:
+                    status = st.selectbox("Status", ["Draft", "Pending Client Approval", "Approved"])
+                
+                if st.form_submit_button("Create Change Order", type="primary", use_container_width=True):
+                    st.success("✅ Change order created and saved!")
+        
+        with col2:
+            st.markdown("### Impact Summary")
+            st.markdown("""
+            <div class="ui-card">
+                <h4>📊 Financial Impact</h4>
+                <p style="color: #CBD5E1;">
+                    <strong>Original:</strong> $8,392<br>
+                    <strong>Changes:</strong> +$1,800<br>
+                    <strong>New Total:</strong> $10,192
+                </p>
+            </div>
+            
+            <div class="ui-card">
+                <h4>⏱️ Schedule Impact</h4>
+                <p style="color: #CBD5E1;">
+                    <strong>Original:</strong> Dec 30<br>
+                    <strong>New:</strong> Jan 3 (+3 days)
+                </p>
+            </div>
+            
+            <div class="ui-card">
+                <h4>💰 Margin Impact</h4>
+                <p style="color: #10B981; font-weight: bold;">Margin maintained at 25%</p>
+            </div>
+            """, unsafe_allow_html=True)
     
-    with col1:
-        st.markdown("""
-        <div class="feature-list">
-            <ul>
-                <li>📝 Create change orders in seconds</li>
-                <li>🔄 Auto-update budget and schedule</li>
-                <li>💵 Automatic cost impact calculation</li>
-                <li>🏷️ Track scope changes by category</li>
-                <li>📧 Send to client for approval</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+    with tab2:
+        st.markdown("### Pending Client Approvals")
+        
+        pending = pd.DataFrame({
+            "CO #": ["CO-001", "CO-002"],
+            "Project": ["Kitchen", "Bathroom"],
+            "Description": ["Upgraded countertops", "Extra bathroom tile"],
+            "Amount": ["$1,800", "$450"],
+            "Sent": ["Dec 15", "Dec 10"],
+            "Status": ["⏳ Awaiting", "⏳ Viewed (3 days ago)"]
+        })
+        
+        st.dataframe(pending, use_container_width=True, hide_index=True)
+        
+        if st.button("📧 Send Reminder", use_container_width=True):
+            st.info("Reminder email sent to customer")
     
-    with col2:
-        st.markdown("""
-        <div class="feature-list">
-            <ul>
-                <li>✍️ E-signature for approval</li>
-                <li>📋 Version control & audit trail</li>
-                <li>🔗 Link change orders to invoice line items</li>
-                <li>📊 Change order trend reports</li>
-                <li>⏱️ Track time from request to approval</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    st.success("✅ Never lose money to scope creep. Every change is captured and approved.")
-    
-    if st.button("Create Change Order (Demo)", type="primary", use_container_width=True):
-        st.info("Demo: Fill out the change order form and see it update your budget automatically!")
+    with tab3:
+        st.markdown("### Approved Change Orders (This Month)")
+        
+        history = pd.DataFrame({
+            "CO #": ["CO-2024-01", "CO-2024-02", "CO-2024-03", "CO-2024-04"],
+            "Project": ["Kitchen", "Bathroom", "Deck", "Kitchen"],
+            "Reason": ["Upgrades", "Bathroom tile", "Extra railings", "Additional outlets"],
+            "Amount": ["$1,800", "$450", "$600", "$200"],
+            "Approved": ["Dec 12", "Dec 5", "Nov 28", "Nov 15"],
+            "Completed": ["✅", "✅", "✅", "✅"]
+        })
+        
+        st.dataframe(history, use_container_width=True, hide_index=True)
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Total Approved", "$3,050")
+        with col2:
+            st.metric("Avg. Amount", "$762.50")
+        with col3:
+            st.metric("Approval Time", "3.2 days avg")
 
-# ==================== DAILY LOGS ====================
+# ==================== DAILY LOGS UI ====================
 elif page == "📸 Daily Logs":
     st.title("📸 Photo-Based Daily Reports")
-    st.markdown("### Capture job progress with photos, weather, and crew notes in one tap")
+    st.markdown("### Capture progress, not paperwork")
     
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.image("https://via.placeholder.com/600x350/334155/F1F5F9?text=Daily+Log+Mobile", use_column_width=True)
-    with col2:
-        st.metric("Report Time", "2 min per day", "vs 20 min manual")
-        st.metric("Photo Storage", "Unlimited", "cloud-backed")
-        st.metric("Client Updates", "Instant", "auto-share portal")
+    tab1, tab2, tab3 = st.tabs(["Create Report", "Photo Gallery", "Daily Reports"])
     
-    st.markdown("---")
-    st.subheader("Key Features")
-    col1, col2 = st.columns(2)
+    with tab1:
+        col1, col2 = st.columns([1.5, 1])
+        
+        with col1:
+            st.markdown("### Today's Report")
+            
+            with st.form("daily_log_form"):
+                project = st.selectbox("Project", ["Kitchen Remodel", "Bathroom Remodel"])
+                date = st.date_input("Date", value=datetime.now())
+                
+                st.markdown("**Upload Photos**")
+                uploaded_photos = st.file_uploader("Choose photos from today", type=['jpg', 'png'], accept_multiple_files=True)
+                
+                if uploaded_photos:
+                    st.success(f"✅ {len(uploaded_photos)} photos ready to upload")
+                
+                st.markdown("**Crew & Tasks**")
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    crew_count = st.number_input("Crew Members Present", value=3, min_value=1)
+                with col_b:
+                    trades = st.multiselect("Trades", ["Framing", "Plumbing", "Electrical", "Drywall", "Finishing"])
+                
+                st.markdown("**Notes**")
+                notes = st.text_area("Work Completed & Notes", value="Framing walls completed. Ready for inspection tomorrow.")
+                
+                st.markdown("**Auto-Detected**")
+                col_x, col_y = st.columns(2)
+                with col_x:
+                    st.info(f"📍 Location: Main St (GPS verified)")
+                with col_y:
+                    st.info(f"🌤️ Weather: 65°F, Partly Cloudy")
+                
+                if st.form_submit_button("Save Daily Report", type="primary", use_container_width=True):
+                    st.success("✅ Daily report saved!")
+        
+        with col2:
+            st.markdown("**Stats**")
+            st.metric("Reports This Month", "28")
+            st.metric("Photos Captured", "287")
+            st.metric("Avg Report Time", "3 min")
     
-    with col1:
-        st.markdown("""
-        <div class="feature-list">
-            <ul>
-                <li>📸 Upload photos from job site</li>
-                <li>🏷️ Auto-tag photos with date/location</li>
-                <li>🌤️ Automatic weather data included</li>
-                <li>👷 Crew member & task notes</li>
-                <li>📋 Attendance tracking</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+    with tab2:
+        st.markdown("### Photo Gallery - Kitchen Remodel")
+        
+        # Create a simple photo gallery
+        photos = [
+            ("Framing Stage", "Dec 15"),
+            ("Electrical Rough-In", "Dec 12"),
+            ("Plumbing Installation", "Dec 10"),
+            ("Foundation", "Dec 8"),
+        ]
+        
+        photo_cols = st.columns(3)
+        for idx, (photo_name, date_taken) in enumerate(photos):
+            with photo_cols[idx % 3]:
+                st.image(f"https://via.placeholder.com/200x150/334155/F1F5F9?text={photo_name}", use_column_width=True)
+                st.caption(f"{photo_name} - {date_taken}")
     
-    with col2:
-        st.markdown("""
-        <div class="feature-list">
-            <ul>
-                <li>📱 Mobile-first design for field use</li>
-                <li>🔗 Link to project for context</li>
-                <li>🤝 Share with clients instantly</li>
-                <li>📊 Progress reports automated</li>
-                <li>🔐 Secure photo archival</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    st.info("💡 Field crews love it: No paperwork, just photos. Everything else is automatic.")
-    
-    if st.button("Take Daily Log Photo (Demo)", type="primary", use_container_width=True):
-        st.info("Demo mode: Pretend to upload a job site photo and see it become a full daily report!")
+    with tab3:
+        st.markdown("### Recent Daily Reports")
+        
+        logs = pd.DataFrame({
+            "Date": ["Dec 15", "Dec 14", "Dec 12", "Dec 10", "Dec 8"],
+            "Project": ["Kitchen", "Kitchen", "Bathroom", "Kitchen", "Deck"],
+            "Crew": ["3", "4", "2", "3", "5"],
+            "Photos": ["8", "12", "6", "10", "15"],
+            "Status": ["✅", "✅", "✅", "✅", "✅"]
+        })
+        
+        st.dataframe(logs, use_container_width=True, hide_index=True)
 
-# ==================== TIME TRACKING ====================
+# ==================== TIME TRACKING UI ====================
 elif page == "⏱️ Time Tracking":
     st.title("⏱️ Job Costing Time Tracking")
-    st.markdown("### See where every hour goes — by employee, job, and task")
+    st.markdown("### Every hour tracked. Every project costs visible.")
     
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.image("https://via.placeholder.com/600x350/334155/F1F5F9?text=Time+Tracking", use_column_width=True)
-    with col2:
-        st.metric("Timesheet Errors", "Down 94%", "automated verification")
-        st.metric("Payroll Processing", "2x faster", "instant sync")
-        st.metric("Job Costing Accuracy", "±3%", "real-time visibility")
+    tab1, tab2, tab3 = st.tabs(["Clock In/Out", "Timesheets", "Labor Analysis"])
     
-    st.markdown("---")
-    st.subheader("Key Features")
-    col1, col2 = st.columns(2)
+    with tab1:
+        col1, col2 = st.columns([1.5, 1])
+        
+        with col1:
+            st.markdown("### Clock In/Out")
+            
+            employee = st.selectbox("Select Employee", ["Mike Johnson", "Sarah Davis", "Tom Wilson", "Lisa Brown"])
+            project = st.selectbox("Project", ["Kitchen Remodel", "Bathroom Remodel", "Deck Build"])
+            cost_code = st.selectbox("Cost Code", ["Framing", "Electrical", "Plumbing", "Finishing", "General Labor"])
+            
+            col_a, col_b = st.columns(2)
+            with col_a:
+                if st.button("🟢 Clock In", use_container_width=True, type="primary"):
+                    st.success(f"✅ {employee} clocked in at 8:00 AM on {project}")
+            with col_b:
+                if st.button("🔴 Clock Out", use_container_width=True):
+                    st.info(f"⏱️ {employee} clocked out at 4:30 PM (8.5 hours)")
+            
+            st.markdown("**Today's Hours**")
+            col_x, col_y, col_z = st.columns(3)
+            with col_x:
+                st.metric("Hours Today", "8.5")
+            with col_y:
+                st.metric("This Week", "42.0")
+            with col_z:
+                st.metric("This Month", "168.5")
+        
+        with col2:
+            st.markdown("**Team Status**")
+            
+            team_status = pd.DataFrame({
+                "Employee": ["Mike Johnson", "Sarah Davis", "Tom Wilson", "Lisa Brown"],
+                "Status": ["🟢 On Clock", "🟢 On Clock", "⚫ Clocked Out", "🟢 On Clock"],
+                "Project": ["Kitchen", "Bathroom", "Off", "Deck"],
+                "Hours Today": ["5.5", "6.0", "8.0", "4.5"]
+            })
+            
+            st.dataframe(team_status, use_container_width=True, hide_index=True)
     
-    with col1:
-        st.markdown("""
-        <div class="feature-list">
-            <ul>
-                <li>⏰ Clock in/out by job & cost code</li>
-                <li>📱 Mobile app with one-tap clocking</li>
-                <li>📍 GPS verification of location</li>
-                <li>⚠️ Overtime alerts (automatic)</li>
-                <li>👷 Track labor costs by employee</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+    with tab2:
+        st.markdown("### Weekly Timesheets (Dec 9-15)")
+        
+        timesheet_data = pd.DataFrame({
+            "Employee": ["Mike Johnson", "Sarah Davis", "Tom Wilson"],
+            "Mon": ["8.0", "8.0", "8.0"],
+            "Tue": ["9.0", "8.5", "8.0"],
+            "Wed": ["8.5", "8.0", "0.0"],
+            "Thu": ["8.0", "8.0", "8.5"],
+            "Fri": ["8.5", "8.0", "8.0"],
+            "Sat": ["4.0", "0.0", "0.0"],
+            "Total": ["46.0", "40.5", "32.5"],
+            "Status": ["⏳ Pending", "✅ Approved", "✅ Approved"]
+        })
+        
+        st.dataframe(timesheet_data, use_container_width=True, hide_index=True)
+        
+        if st.button("✅ Approve All Timesheets", type="primary", use_container_width=True):
+            st.success("✅ All timesheets approved!")
     
-    with col2:
-        st.markdown("""
-        <div class="feature-list">
-            <ul>
-                <li>🔄 Automatic timesheet routing for approval</li>
-                <li>💰 Compare actual labor vs. budget</li>
-                <li>📊 Productivity reports by crew</li>
-                <li>🎯 Capture billable hours separately</li>
-                <li>📈 Historical labor cost analysis</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    st.success("✅ Reduce time theft and streamline payroll. Everyone clocks in once, data flows everywhere.")
-    
-    if st.button("Clock In (Demo)", type="primary", use_container_width=True):
-        st.info("Demo: You clocked in at 8:00 AM on Renovation Project - Kitchen.")
+    with tab3:
+        st.markdown("### Labor Cost Analysis")
+        
+        labor_data = pd.DataFrame({
+            "Project": ["Kitchen", "Bathroom", "Deck", "Roof Repair"],
+            "Budgeted": [5000, 3000, 4000, 2500],
+            "Actual": [4800, 3200, 3900, 2400],
+            "Hours": ["75", "50", "65", "40"],
+            "Avg Rate": ["64", "64", "60", "60"],
+            "Variance": ["$200", "-$200", "$100", "$100"]
+        })
+        
+        fig = go.Figure(data=[
+            go.Bar(name='Budgeted', x=labor_data['Project'], y=labor_data['Budgeted'], marker_color='#3B82F6'),
+            go.Bar(name='Actual', x=labor_data['Project'], y=labor_data['Actual'], marker_color='#10B981')
+        ])
+        fig.update_layout(
+            barmode='group',
+            template='plotly_dark',
+            paper_bgcolor='rgba(15, 23, 42, 1)',
+            plot_bgcolor='rgba(30, 41, 55, 1)',
+            font=dict(color='#F1F5F9'),
+            height=400
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        
+        st.dataframe(labor_data, use_container_width=True, hide_index=True)
 
-# ==================== REPORTING ====================
+# ==================== REPORTING UI ====================
 elif page == "📈 Reporting":
     st.title("📈 Financial Reporting & Insights")
-    st.markdown("### Dashboard view of profit, cash flow, and project performance")
+    st.markdown("### Real-time dashboards of your entire business")
     
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.image("https://via.placeholder.com/600x350/334155/F1F5F9?text=Reports+Dashboard", use_column_width=True)
-    with col2:
-        st.metric("Report Generation", "5 min", "vs 4 hours manual")
-        st.metric("Insights Discovered", "3.2x more", "with automated reports")
-        st.metric("Decision Speed", "Faster", "real-time data")
+    tab1, tab2, tab3 = st.tabs(["Dashboard", "P&L Report", "Cash Flow"])
     
-    st.markdown("---")
-    st.subheader("Key Reports")
-    col1, col2, col3 = st.columns(3)
+    with tab1:
+        st.markdown("### Business Dashboard")
+        
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Revenue (YTD)", "$487,500", "↑ 24%")
+        with col2:
+            st.metric("Gross Profit", "$146,250", "30% margin")
+        with col3:
+            st.metric("Cash Balance", "$78,450", "↑ $12,000")
+        with col4:
+            st.metric("Active Projects", "12", "4 on budget")
+        
+        st.markdown("---")
+        
+        # Revenue trend
+        st.markdown("### Revenue Trend (Last 12 Months)")
+        months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        revenue = [25000, 28000, 32000, 30000, 38000, 42000, 45000, 41000, 39000, 42000, 48000, 52000]
+        
+        fig = go.Figure(data=[
+            go.Scatter(x=months, y=revenue, mode='lines+markers', name='Revenue', 
+                      line=dict(color='#10B981', width=3), marker=dict(size=8))
+        ])
+        fig.update_layout(
+            template='plotly_dark',
+            paper_bgcolor='rgba(15, 23, 42, 1)',
+            plot_bgcolor='rgba(30, 41, 55, 1)',
+            font=dict(color='#F1F5F9'),
+            height=400
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        
+        st.markdown("---")
+        
+        # Profit by project
+        st.markdown("### Profitability by Project (YTD)")
+        
+        profit_data = pd.DataFrame({
+            "Project": ["Kitchen #1", "Bathroom #2", "Deck Addition", "Roof Repair", "Siding Job"],
+            "Revenue": [15000, 8500, 12000, 6200, 9800],
+            "Cost": [11250, 7225, 10200, 5270, 7840],
+            "Profit": [3750, 1275, 1800, 930, 1960],
+            "Margin %": ["25%", "15%", "15%", "15%", "20%"]
+        })
+        
+        fig = px.bar(profit_data, x='Project', y=['Revenue', 'Cost'], barmode='stack',
+                    color_discrete_map={'Revenue': '#10B981', 'Cost': '#EF4444'})
+        fig.update_layout(
+            template='plotly_dark',
+            paper_bgcolor='rgba(15, 23, 42, 1)',
+            plot_bgcolor='rgba(30, 41, 55, 1)',
+            font=dict(color='#F1F5F9'),
+            height=400
+        )
+        st.plotly_chart(fig, use_container_width=True)
     
-    with col1:
-        st.markdown("""
-        <div class="module-card">
-            <h3>💼 Profit & Loss</h3>
-            <p>By project, month, or year. See exactly what's profitable.</p>
-        </div>
-        """, unsafe_allow_html=True)
+    with tab2:
+        st.markdown("### Profit & Loss Statement (YTD)")
+        
+        pl_data = pd.DataFrame({
+            "Line Item": [
+                "Total Revenue",
+                "Cost of Labor",
+                "Cost of Materials",
+                "Subcontractor Costs",
+                "Gross Profit",
+                "Overhead Expenses",
+                "Administrative",
+                "Operating Profit",
+                "Interest/Other",
+                "Net Profit"
+            ],
+            "Amount": [487500, 146250, 146250, 97500, 97500, 24375, 14625, 58500, -2000, 56500],
+            "% of Revenue": ["100%", "30%", "30%", "20%", "20%", "5%", "3%", "12%", "0.4%", "11.6%"]
+        })
+        
+        st.dataframe(pl_data, use_container_width=True, hide_index=True)
     
-    with col2:
-        st.markdown("""
-        <div class="module-card">
-            <h3>💰 Cash Flow</h3>
-            <p>30/60/90-day forecasts. Never run out of working capital.</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        st.markdown("""
-        <div class="module-card">
-            <h3>📊 Project Health</h3>
-            <p>Budget vs. actual, timeline status, and profitability per job.</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("Additional Reports")
-        st.markdown("""
-        - Aging receivables (who owes you?)
-        - Aging payables (what do you owe?)
-        - Labor cost analysis
-        - Material cost variance
-        - Employee productivity
-        - Subcontractor performance
-        """)
-    
-    with col2:
-        st.subheader("Data Export & Integration")
-        st.markdown("""
-        - Export to Excel or PDF
-        - Email scheduled reports
-        - QuickBooks Online sync
-        - Tax-ready summaries
-        - API access for custom tools
-        - Historical data (7+ years)
-        """)
-    
-    if st.button("View Sample Report", type="primary", use_container_width=True):
-        st.success("Opening sample P&L report showing year-over-year comparison...")
+    with tab3:
+        st.markdown("### Cash Flow Statement")
+        
+        dates = pd.date_range(start='2024-11-01', periods=12, freq='M')
+        opening = [50000, 55000, 63000, 72000, 68000, 78000, 85000, 92000, 88000, 95000, 105000, 113000]
+        
+        fig = go.Figure(data=[
+            go.Scatter(x=dates, y=opening, mode='lines+markers', name='Cash Balance',
+                      line=dict(color='#3B82F6', width=3), marker=dict(size=10),
+                      fill='tozeroy', fillcolor='rgba(59, 130, 246, 0.2)')
+        ])
+        fig.update_layout(
+            template='plotly_dark',
+            paper_bgcolor='rgba(15, 23, 42, 1)',
+            plot_bgcolor='rgba(30, 41, 55, 1)',
+            font=dict(color='#F1F5F9'),
+            height=400,
+            yaxis_title="Cash Balance ($)"
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
-# ==================== STAFF MANAGEMENT ====================
+# ==================== STAFF MANAGEMENT UI ====================
 elif page == "👷 Staff Management":
     st.title("👷 Staff Management & Permissions")
-    st.markdown("### Control who sees what — by role and access level")
+    st.markdown("### Control who sees what")
     
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.image("https://via.placeholder.com/600x350/334155/F1F5F9?text=Team+Management", use_column_width=True)
-    with col2:
-        st.metric("Onboarding Time", "5 min", "per team member")
-        st.metric("Security Breaches", "Down 99%", "role-based controls")
-        st.metric("Audit Trail", "Complete", "every action logged")
+    tab1, tab2, tab3 = st.tabs(["Team Members", "Invite User", "Audit Log"])
     
-    st.markdown("---")
-    st.subheader("User Roles")
-    col1, col2, col3 = st.columns(3)
+    with tab1:
+        st.markdown("### Active Team Members")
+        
+        team_data = pd.DataFrame({
+            "Name": ["Mike Johnson", "Sarah Davis", "Tom Wilson", "Lisa Brown", "John Martinez"],
+            "Role": ["Project Manager", "Estimator", "Field Supervisor", "Accountant", "Owner"],
+            "Status": ["✅ Active", "✅ Active", "✅ Active", "✅ Active", "✅ Active"],
+            "Last Login": ["Today", "Yesterday", "2 days ago", "Today", "Today"],
+            "Actions": ["Edit", "Edit", "Edit", "Edit", "Edit"]
+        })
+        
+        st.dataframe(team_data, use_container_width=True, hide_index=True)
     
-    with col1:
-        st.markdown("""
-        <div class="module-card">
-            <h3>👔 Owner</h3>
-            <p>Full access to all data, billing, and team management.</p>
-        </div>
-        """, unsafe_allow_html=True)
+    with tab2:
+        st.markdown("### Invite Team Member")
+        
+        with st.form("invite_form"):
+            col1, col2 = st.columns(2)
+            with col1:
+                email = st.text_input("Email Address", placeholder="teammate@company.com")
+                first_name = st.text_input("First Name")
+            with col2:
+                last_name = st.text_input("Last Name")
+                role = st.selectbox("Role", ["Owner", "Project Manager", "Estimator", "Field Supervisor", "Accountant", "Custom"])
+            
+            st.markdown("**Permissions**")
+            
+            perms = st.columns(4)
+            perms_list = ["View Budgets", "Edit Budgets", "Approve Invoices", "View Reports"]
+            for col, perm in zip(perms, perms_list):
+                with col:
+                    st.checkbox(perm)
+            
+            if st.form_submit_button("Send Invite", type="primary", use_container_width=True):
+                st.success(f"✅ Invite sent to {email}!")
     
-    with col2:
-        st.markdown("""
-        <div class="module-card">
-            <h3>📋 Project Manager</h3>
-            <p>View/edit projects, budgets, schedules, and team hours.</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        st.markdown("""
-        <div class="module-card">
-            <h3>🔨 Field Supervisor</h3>
-            <p>Log time, capture photos, update status (no financials).</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("""
-        <div class="module-card">
-            <h3>💼 Estimator</h3>
-            <p>Create/edit estimates, view project data, no billing access.</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("""
-        <div class="module-card">
-            <h3>💰 Accountant</h3>
-            <p>Full financial visibility, no project editing capability.</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    st.subheader("Permission Controls")
-    st.markdown("""
-    - View/edit budgets
-    - Approve invoices & payments
-    - Send estimates to clients
-    - View financial reports
-    - Export data
-    - Delete/archive projects
-    - Invite new team members
-    - Custom role creation
-    """)
-    
-    st.success("✅ Full audit trail: See who did what, when, and from where.")
-    
-    if st.button("Invite Team Member (Demo)", type="primary", use_container_width=True):
-        st.info("Demo: Enter an email address to invite a new team member!")
+    with tab3:
+        st.markdown("### Audit Trail (Last 50 Actions)")
+        
+        audit_data = pd.DataFrame({
+            "Date": ["Dec 15, 1:23 PM", "Dec 15, 11:45 AM", "Dec 14, 3:30 PM", "Dec 14, 2:15 PM"],
+            "User": ["Mike Johnson", "Sarah Davis", "Tom Wilson", "Mike Johnson"],
+            "Action": ["Approved Invoice INV-001", "Created Estimate EST-005", "Clocked out - Kitchen", "Viewed Budget Report"],
+            "Details": ["$8,392", "Kitchen Remodel", "8.5 hours", "Q4 Summary"]
+        })
+        
+        st.dataframe(audit_data, use_container_width=True, hide_index=True)
 
-# ==================== SUBCONTRACTOR MANAGEMENT ====================
+# ==================== SUBCONTRACTOR MANAGEMENT UI ====================
 elif page == "🤝 Subcontractor Management":
     st.title("🤝 Subcontractor Management")
-    st.markdown("### Streamlined workflows for RFQs, bidding, and payment")
+    st.markdown("### RFQs, bidding, and payments - all streamlined")
     
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.image("https://via.placeholder.com/600x350/334155/F1F5F9?text=Sub+Portal", use_column_width=True)
-    with col2:
-        st.metric("Payment Processing", "40% faster", "with portal")
-        st.metric("RFQ Response Time", "Avg 2.1 days", "automated tracking")
-        st.metric("Sub Satisfaction", "94%", "self-service portal")
+    tab1, tab2, tab3 = st.tabs(["Send RFQ", "Active Subs", "Bid Comparison"])
     
-    st.markdown("---")
-    st.subheader("Key Features")
-    col1, col2 = st.columns(2)
+    with tab1:
+        col1, col2 = st.columns([1.5, 1])
+        
+        with col1:
+            st.markdown("### Create RFQ")
+            
+            with st.form("rfq_form"):
+                project = st.selectbox("Project", ["Kitchen Remodel", "Bathroom Remodel", "Deck Build"])
+                trade = st.selectbox("Trade", ["Plumbing", "Electrical", "HVAC", "Framing", "Drywall", "Painting"])
+                
+                scope = st.text_area("Scope of Work", value="Supply and install new plumbing for kitchen and bathroom remodel including water lines, drain lines, fixtures installation.")
+                
+                due_date = st.date_input("Bid Due Date", value=datetime.now() + timedelta(days=5))
+                
+                subs = st.multiselect("Select Subcontractors", ["John's Plumbing", "ABC Electric", "Premier HVAC", "Quality Framing", "Smooth Drywall"])
+                
+                if st.form_submit_button("Send RFQ", type="primary", use_container_width=True):
+                    st.success(f"✅ RFQ sent to {len(subs)} subcontractors!")
+        
+        with col2:
+            st.markdown("**RFQ Status**")
+            st.metric("RFQs Sent This Month", "12")
+            st.metric("Avg Response Time", "2.1 days")
+            st.metric("Completion Rate", "94%")
     
-    with col1:
-        st.markdown("""
-        <div class="feature-list">
-            <ul>
-                <li>📋 Create and send RFQs in seconds</li>
-                <li>📊 Compare bids side-by-side</li>
-                <li>📱 Subs respond on mobile (easy UX)</li>
-                <li>🔗 Link to project & documents</li>
-                <li>📁 Organize by trade & location</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+    with tab2:
+        st.markdown("### Active Subcontractors")
+        
+        subs_data = pd.DataFrame({
+            "Sub Name": ["John's Plumbing", "ABC Electric", "Premier HVAC", "Quality Framing"],
+            "Trade": ["Plumbing", "Electrical", "HVAC", "Framing"],
+            "Status": ["✅ Active", "✅ Active", "✅ Active", "⚠️ No Recent Work"],
+            "Projects": ["2", "3", "1", "0"],
+            "Avg Rating": ["5.0", "4.8", "4.9", "4.5"]
+        })
+        
+        st.dataframe(subs_data, use_container_width=True, hide_index=True)
     
-    with col2:
-        st.markdown("""
-        <div class="feature-list">
-            <ul>
-                <li>🤝 Sub portal with job access</li>
-                <li>💵 One-click invoice upload</li>
-                <li>💸 One-click payment approval</li>
-                <li>📋 Download plans & specs</li>
-                <li>📞 Built-in messaging (no email chains)</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    st.info("💡 Pro tip: Subs report spending 40% less time on admin with the self-service portal.")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.success("📊 Performance Tracking")
-        st.caption("Track on-time completion, quality ratings, and profitability by subcontractor")
-    
-    with col2:
-        st.success("💰 Manage Relationships")
-        st.caption("Store contact info, rates, insurance docs, and certifications in one place")
-    
-    if st.button("Invite Subcontractor (Demo)", type="primary", use_container_width=True):
-        st.info("Demo: Send a portal invite to a subcontractor email!")
+    with tab3:
+        st.markdown("### Recent Bid Comparison")
+        
+        bids = pd.DataFrame({
+            "Subcontractor": ["John's Plumbing", "Premium Plumbing", "City Plumbing"],
+            "Bid Amount": ["$4,200", "$4,500", "$3,950"],
+            "Timeline": ["5 days", "7 days", "3 days"],
+            "Insurance": ["✅", "✅", "❌"],
+            "Rating": ["5.0", "4.2", "3.8"],
+            "Selected": ["✅", "", ""]
+        })
+        
+        st.dataframe(bids, use_container_width=True, hide_index=True)
 
-# ==================== COST TRACKING ====================
+# ==================== COST TRACKING UI ====================
 elif page == "💰 Cost Tracking":
     st.title("💰 Real-Time Cost Tracking")
-    st.markdown("### See project costs as they happen — not after the fact")
+    st.markdown("### See project costs as they happen")
     
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.image("https://via.placeholder.com/600x350/334155/F1F5F9?text=Cost+Tracking", use_column_width=True)
-    with col2:
-        st.metric("Cost Overruns Caught", "3.5x faster", "vs manual tracking")
-        st.metric("Project Margin Protected", "±2%", "accurate forecasting")
-        st.metric("Budget Variance", "Real-time visibility", "no surprises")
+    tab1, tab2, tab3 = st.tabs(["Cost Dashboard", "Cost Breakdown", "Variance Analysis"])
     
-    st.markdown("---")
-    st.subheader("Key Features")
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("""
-        <div class="feature-list">
-            <ul>
-                <li>📊 Dashboard showing all costs</li>
-                <li>🔍 Line-item cost breakdown</li>
-                <li>💸 Labor, materials, subs all integrated</li>
-                <li>⚠️ Real-time overage alerts</li>
-                <li>📈 Trending & forecasting</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("""
-        <div class="feature-list">
-            <ul>
-                <li>🔗 All costs tied to budget line items</li>
-                <li>📱 Mobile cost entry from field</li>
-                <li>🏷️ Automatic categorization</li>
-                <li>📊 Cost reports & variance analysis</li>
-                <li>📉 Historical cost benchmarks</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    st.subheader("Cost Categories Tracked")
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown("**Direct Costs**\n- Labor\n- Materials\n- Equipment")
-    with col2:
-        st.markdown("**Subcontractor Costs**\n- Sub labor\n- Sub materials\n- Change orders")
-    with col3:
-        st.markdown("**Overhead**\n- Permits\n- Insurance\n- Site management")
-    
-    st.markdown("---")
-    st.success("✅ Every bill, expense, and timesheet automatically flows into your cost tracking.")
-    
-    if st.button("View Cost Breakdown (Demo)", type="primary", use_container_width=True):
-        st.info("Opening cost dashboard for Sample Renovation Project...")
-
-# ==================== ESTIMATING ====================
-elif page == "🔨 Estimating":
-    st.title("AI-Powered Estimating")
-    st.write("**Turn institutional knowledge into a fast, repeatable system.**")
-    st.image(
-        "https://via.placeholder.com/900x500/334155/F1F5F9?text=AI+Estimating+Demo",
-        width="stretch"
-    )
-    
-    for feature in [
-        "Describe project or upload plans → AI generates complete estimate",
-        "Reusable templates with industry standard codes",
-        "Standardize markup, overhead, and margins",
-        "Automatic conversion: Estimate → Budget",
-        "Digital client approvals with branding"
-    ]:
-        st.success(f"✅ {feature}")
-
-# ==================== FINANCIALS ====================
-elif page == "💰 Financials":
-    st.title("Financials")
-    tab1, tab2, tab3 = st.tabs(["Budgets & Cash Flow", "Invoicing & Payments", "Reporting"])
     with tab1:
-        st.write("Real-time budget tracking with line-item visibility")
-        st.bar_chart({"Budget": [120000, 85000, 65000], "Actual": [115000, 92000, 61000]})
-
-# ==================== PROJECT MANAGEMENT ====================
-elif page == "📊 Project Management":
-    st.title("Project Management")
-    st.markdown("### Keep every job on track with real-time visibility and control")
-    st.write("From daily logs to change orders — manage the entire job lifecycle in one place.")
-
-    # Key metrics
-    m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Active Projects", "47", "+5")
-    m2.metric("On-Time Completion", "92%", "↑ 8%")
-    m3.metric("Avg. Change Orders", "3.2", "per job")
-    m4.metric("Time Saved", "12 hrs/week", "on admin")
-
-    st.markdown("---")
-
-    # Feature cards
-    st.subheader("Core Project Tools")
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        st.markdown("""
-        <div class="module-card">
-            <h3>📸 Daily Logs</h3>
-            <p>Photo-based daily reports with automatic weather data, crew notes, and progress tracking. Share with clients in one click.</p>
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown("""
-        <div class="module-card">
-            <h3>⏱️ Time Tracking</h3>
-            <p>Clock in/out by job, employee, or cost code. GPS verification and overtime alerts included.</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with col2:
-        st.markdown("""
-        <div class="module-card">
-            <h3>🔄 Change Orders</h3>
-            <p>Create, approve, and track change orders digitally. Automatic budget & schedule updates.</p>
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown("""
-        <div class="module-card">
-            <h3>📅 Scheduling</h3>
-            <p>Simple Gantt-style timelines. Drag-and-drop tasks, assign crews, and set dependencies.</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with col3:
-        st.markdown("""
-        <div class="module-card">
-            <h3>📂 Document Hub</h3>
-            <p>Plans, contracts, permits, and photos — all organized by project with version control.</p>
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown("""
-        <div class="module-card">
-            <h3>📍 Job Site Status</h3>
-            <p>Live progress boards, punch lists, and inspection checklists accessible from any device.</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("---")
-    st.subheader("How it works on the job site")
-    st.image(
-        "https://via.placeholder.com/900x350/334155/F1F5F9?text=Project+Dashboard+%26+Mobile+App",
-        width="stretch"
-    )
-
-    st.success("✅ Mobile-first design — field crews can log time, photos, and notes from any smartphone")
-
-# ==================== TEAM & SUBS ====================
-elif page == "👥 Team & Subs":
-    st.title("Team & Subcontractor Management")
-    st.markdown("### Give the right people the right access — nothing more, nothing less")
-    st.write("Role-based permissions, subcontractor portals, and seamless payments keep everyone aligned.")
-
-    # Metrics
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Team Members", "28", "active")
-    c2.metric("Active Subs", "64", "across projects")
-    c3.metric("Avg. Payment Time", "2.1 days", "faster")
-
-    st.markdown("---")
-
-    st.subheader("Staff Management")
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.markdown("""
-        <div class="module-card">
-            <h3>👷 Role-Based Access</h3>
-            <p>Owner • PM • Estimator • Field Supervisor • Accountant — each role sees only what they need.</p>
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown("""
-        <div class="module-card">
-            <h3>🔐 Permissions & Security</h3>
-            <p>Control who can view budgets, approve change orders, or send invoices. Full audit trail included.</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with col2:
-        st.markdown("""
-        <div class="module-card">
-            <h3>📱 Easy Onboarding</h3>
-            <p>Invite team members by email. They get instant access on web and mobile with no extra licenses for basic roles.</p>
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown("""
-        <div class="module-card">
-            <h3>📊 Performance Insights</h3>
-            <p>Track hours, productivity, and job profitability by team member or crew.</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("---")
-    st.subheader("Subcontractor Portal")
-
-    colA, colB, colC = st.columns(3)
-    with colA:
-        st.markdown("""
-        <div class="module-card">
-            <h3>🤝 Sub Portal Access</h3>
-            <p>Subs log in to view assigned work, upload invoices, and download plans — no email chains needed.</p>
-        </div>
-        """, unsafe_allow_html=True)
-    with colB:
-        st.markdown("""
-        <div class="module-card">
-            <h3>💸 One-Click Payments</h3>
-            <p>Approve sub invoices and pay directly from Burst. ACH, credit card, or check — your choice.</p>
-        </div>
-        """, unsafe_allow_html=True)
-    with colC:
-        st.markdown("""
-        <div class="module-card">
-            <h3>📋 Bid & Document Sharing</h3>
-            <p>Send RFQs, collect bids, and share project documents securely with selected subcontractors.</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.info("💡 Pro tip: Most users report 40%+ reduction in payment delays after enabling the sub portal.")
+        st.markdown("### Project Cost Summary")
+        
+        cost_summary = pd.DataFrame({
+            "Project": ["Kitchen", "Bathroom", "Deck", "Roof", "Siding"],
+            "Budget": [15000, 8500, 12000, 6200, 9800],
+            "Spent": [14500, 8200, 11800, 5500, 9600],
+            "Remaining": [500, 300, 200, 700, 200],
+            "% Spent": ["96.7%", "96.5%", "98.3%", "88.7%", "98.0%"]
+        })
+        
+        fig = go.Figure(data=[
+            go.Bar(name='Spent', x=cost_summary['Project'], y=cost_summary['Spent'], marker_color='#EF4444'),
+            go.Bar(name='Remaining', x=cost_summary['Project'], y=cost_summary['Remaining'], marker_color='#10B981')
+        ])
+        fig.update_layout(
+            barmode='stack',
+            template='plotly_dark',
+            paper_bgcolor='rgba(15, 23, 42, 1)',
+            plot_bgcolor='rgba(30, 41, 55, 1)',
+            font=dict(color='#F1F5F9'),
+            height=400
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with tab2:
+        st.markdown("### Cost Breakdown - Kitchen Remodel")
+        
+        breakdown = pd.DataFrame({
+            "Category": ["Labor", "Materials", "Equipment", "Subcontractors", "Permits"],
+            "Budget": [5000, 6000, 1500, 2000, 500],
+            "Actual": [4800, 6200, 1400, 1900, 200],
+            "Variance": [200, -200, 100, 100, 300]
+        })
+        
+        fig = px.pie(breakdown, values='Actual', names='Category',
+                    color_discrete_sequence=['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'])
+        fig.update_layout(
+            template='plotly_dark',
+            paper_bgcolor='rgba(15, 23, 42, 1)',
+            font=dict(color='#F1F5F9'),
+            height=400
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        
+        st.dataframe(breakdown, use_container_width=True, hide_index=True)
+    
+    with tab3:
+        st.markdown("### Variance Analysis")
+        
+        variance = pd.DataFrame({
+            "Category": ["Labor", "Materials", "Equipment", "Subs", "Permits"],
+            "Budget": [5000, 6000, 1500, 2000, 500],
+            "Actual": [4800, 6200, 1400, 1900, 200],
+            "Variance": [200, -200, 100, 100, 300],
+            "Variance %": ["4.0%", "-3.3%", "6.7%", "5.0%", "60.0%"],
+            "Status": ["✅", "⚠️", "✅", "✅", "✅"]
+        })
+        
+        st.dataframe(variance, use_container_width=True, hide_index=True)
 
 # ==================== PRICING ====================
 elif page == "💵 Pricing":
     st.title("Simple, Transparent Pricing")
     st.markdown("### No long-term contracts. No hidden fees. Cancel anytime.")
-    st.write("Choose the plan that fits your business size. All plans include unlimited projects and support.")
-
-    st.markdown("---")
 
     col1, col2 = st.columns(2)
 
@@ -1156,27 +1455,6 @@ elif page == "💵 Pricing":
         </div>
         """, unsafe_allow_html=True)
         st.button("Choose PRO", type="primary", use_container_width=True, key="pro")
-
-    st.markdown("---")
-
-    # Guarantee & extras
-    g1, g2, g3 = st.columns(3)
-    with g1:
-        st.success("🛡️ 30-day money-back guarantee")
-    with g2:
-        st.info("📅 No long-term contracts")
-    with g3:
-        st.success("🚀 Free onboarding call included")
-
-    st.markdown("### Frequently Asked Questions")
-    with st.expander("Can I switch plans later?"):
-        st.write("Yes — upgrade or downgrade anytime. Changes take effect on your next billing cycle.")
-    with st.expander("Do you offer annual billing?"):
-        st.write("Yes. Pay annually and get 2 months free (Essentials $1,990/yr • PRO $3,990/yr).")
-    with st.expander("Is there a free trial?"):
-        st.write("Absolutely. Start a 14-day free trial with full access to the PRO plan — no credit card required.")
-    with st.expander("What payment methods do you accept?"):
-        st.write("All major credit cards and ACH bank transfers.")
 
 # ==================== CONTACT US ====================
 elif page == "📞 Contact Us":
